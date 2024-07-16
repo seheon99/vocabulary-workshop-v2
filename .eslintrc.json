@@ -1,3 +1,46 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:tailwindcss/recommended",
+    "plugin:storybook/recommended"
+  ],
+  "rules": {
+    "tailwindcss/enforces-negative-arbitrary-values": "off",
+    "import/no-deprecated": "error",
+    "import/no-empty-named-blocks": "error",
+    "import/no-unused-modules": "error",
+    "import/no-import-module-exports": "error",
+    "import/no-absolute-path": "error",
+    "import/no-relative-packages": "error",
+    "import/no-useless-path-segments": "error",
+    "import/consistent-type-specifier-style": "error",
+    "import/first": "error",
+    "import/newline-after-import": "error",
+    "import/no-duplicates": "error",
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "unknown",
+          "type",
+          [
+            "parent",
+            "index",
+            "sibling",
+            "object"
+          ]
+        ],
+        "newlines-between": "always",
+        "alphabetize": {
+          "order": "asc",
+          "orderImportKind": "asc",
+          "caseInsensitive": true
+        },
+        "warnOnUnassignedImports": true
+      }
+    ]
+  }
 }
