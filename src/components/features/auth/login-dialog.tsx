@@ -1,8 +1,7 @@
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { mutate } from "swr";
 
 import {
   Button,
@@ -13,12 +12,11 @@ import {
   DialogTitle,
   ErrorMessage,
   Field,
-  Fieldset,
+  FieldGroup,
   Input,
   Label,
 } from "@/components/base";
-import { app } from "@/firebase";
-import { CURRENT_USER_KEY } from "@/hooks";
+import { auth } from "@/firebase";
 
 import type { FirebaseError } from "firebase/app";
 import type { SubmitHandler } from "react-hook-form";
@@ -45,12 +43,7 @@ export function LoginDialog({
       try {
         if (!loading) {
           setLoading(true);
-          await signInWithEmailAndPassword(
-            getAuth(app),
-            data.email,
-            data.password,
-          );
-          mutate(CURRENT_USER_KEY);
+          await signInWithEmailAndPassword(auth, data.email, data.password);
         }
       } catch (error) {
         const firebaseError = error as FirebaseError;
@@ -75,7 +68,7 @@ export function LoginDialog({
           Login to your account to access full features.
         </DialogDescription>
         <DialogBody>
-          <Fieldset>
+          <FieldGroup>
             <Field>
               <Label>Email</Label>
               <Input
@@ -100,7 +93,7 @@ export function LoginDialog({
                 <ErrorMessage>{errors.password.message}</ErrorMessage>
               )}
             </Field>
-          </Fieldset>
+          </FieldGroup>
         </DialogBody>
         <DialogActions>
           <Button plain onClick={showSignup}>

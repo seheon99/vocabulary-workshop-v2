@@ -1,4 +1,13 @@
 import { initializeApp } from "firebase/app";
+import {
+  browserSessionPersistence,
+  getAuth,
+  onAuthStateChanged,
+  setPersistence,
+} from "firebase/auth";
+import { mutate } from "swr";
+
+import { CURRENT_USER_KEY } from "./hooks";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA0tuVZ-YPzZBlEB7it0dSeUFUqlwxkScQ",
@@ -11,3 +20,8 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
+
+export const auth = getAuth(app);
+
+setPersistence(auth, browserSessionPersistence);
+onAuthStateChanged(auth, () => mutate(CURRENT_USER_KEY));

@@ -1,8 +1,7 @@
-import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useCallback, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { mutate } from "swr";
 
 import {
   Button,
@@ -17,8 +16,7 @@ import {
   Input,
   Label,
 } from "@/components/base";
-import { app } from "@/firebase";
-import { CURRENT_USER_KEY } from "@/hooks";
+import { auth } from "@/firebase";
 
 import type { FirebaseError } from "firebase/app";
 
@@ -45,12 +43,7 @@ export function SignupDialog({
       try {
         if (!loading) {
           setLoading(true);
-          await createUserWithEmailAndPassword(
-            getAuth(app),
-            data.email,
-            data.password,
-          );
-          mutate(CURRENT_USER_KEY);
+          await createUserWithEmailAndPassword(auth, data.email, data.password);
         }
       } catch (error) {
         const firebaseError = error as FirebaseError;

@@ -10,7 +10,6 @@ import {
   UserCircleIcon,
 } from "@heroicons/react/20/solid";
 import { getAuth, signOut } from "firebase/auth";
-import { mutate } from "swr";
 
 import {
   Dropdown,
@@ -25,7 +24,7 @@ import {
 } from "@/components/base";
 import { LoginButton } from "@/components/features/auth";
 import { app } from "@/firebase";
-import { CURRENT_USER_KEY, useCurrentUser } from "@/hooks";
+import { useCurrentUser } from "@/hooks";
 
 export function NavbarUserDropdown() {
   const { data: user } = useCurrentUser();
@@ -77,9 +76,8 @@ function UserDropdown({
         </DropdownItem>
         <DropdownDivider />
         <DropdownItem
-          onClick={() => {
-            signOut(getAuth(app));
-            mutate(CURRENT_USER_KEY);
+          onClick={async () => {
+            await signOut(getAuth(app));
           }}
         >
           <ArrowRightStartOnRectangleIcon />
