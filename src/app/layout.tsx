@@ -4,6 +4,8 @@ import {
   RocketLaunchIcon,
 } from "@heroicons/react/20/solid";
 import { Inter } from "next/font/google";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import {
   Navbar,
@@ -88,6 +90,7 @@ export default function RootLayout({
         >
           {children}
         </SidebarLayout>
+        <ToastContainer />
       </body>
     </html>
   );
