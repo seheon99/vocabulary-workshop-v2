@@ -5,6 +5,7 @@ import {
   onAuthStateChanged,
   setPersistence,
 } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 import { mutate } from "swr";
 
 import { CURRENT_USER_KEY } from "./hooks";
@@ -25,3 +26,5 @@ export const auth = getAuth(app);
 
 setPersistence(auth, browserSessionPersistence);
 onAuthStateChanged(auth, () => mutate(CURRENT_USER_KEY));
+
+export const firestore = getFirestore(app);

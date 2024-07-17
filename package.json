@@ -13,6 +13,7 @@
     "@headlessui/react": "^2.1.2",
     "@heroicons/react": "^2.1.5",
     "clsx": "^2.1.1",
+    "es-toolkit": "^1.10.1",
     "firebase": "^10.12.3",
     "framer-motion": "^11.3.4",
     "next": "14.2.5",
