@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ArrowRightStartOnRectangleIcon,
   Cog8ToothIcon,
@@ -7,6 +9,8 @@ import {
   ChevronUpIcon,
   UserCircleIcon,
 } from "@heroicons/react/20/solid";
+import { getAuth, signOut } from "firebase/auth";
+import { mutate } from "swr";
 
 import {
   Dropdown,
@@ -19,8 +23,17 @@ import {
   SidebarItem,
   SidebarLabel,
 } from "@/components/base";
+import { LoginButton } from "@/components/features/auth";
+import { app } from "@/firebase";
+import { CURRENT_USER_KEY, useCurrentUser } from "@/hooks";
 
 export function NavbarUserDropdown() {
+  const { data: user } = useCurrentUser();
+
+  if (!user) {
+    return <LoginButton />;
+  }
+
   return (
     <UserDropdown as={NavbarItem} anchor="bottom end">
       Account
@@ -30,6 +43,12 @@ export function NavbarUserDropdown() {
 }
 
 export function SidebarUserDropdown() {
+  const { data: user } = useCurrentUser();
+
+  if (!user) {
+    return <LoginButton />;
+  }
+
   return (
     <UserDropdown as={SidebarItem} anchor="top start">
       <UserCircleIcon />
@@ -57,7 +76,12 @@ function UserDropdown({
           <DropdownLabel>Settings</DropdownLabel>
         </DropdownItem>
         <DropdownDivider />
-        <DropdownItem href="/logout">
+        <DropdownItem
+          onClick={() => {
+            signOut(getAuth(app));
+            mutate(CURRENT_USER_KEY);
+          }}
+        >
           <ArrowRightStartOnRectangleIcon />
           <DropdownLabel>Logout</DropdownLabel>
         </DropdownItem>
