@@ -1,5 +1,5 @@
 import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { mutate } from "swr";
@@ -31,6 +31,8 @@ export function SignupDialog({
   onClose: (value: boolean) => void;
   showLogin: () => void;
 }) {
+  const [loading, setLoading] = useState(false);
+
   const {
     register,
     watch,
@@ -38,23 +40,30 @@ export function SignupDialog({
     handleSubmit,
   } = useForm<FormInputs>();
 
-  const onSubmit = useCallback<SubmitHandler<FormInputs>>(async (data) => {
-    try {
-      await createUserWithEmailAndPassword(
-        getAuth(app),
-        data.email,
-        data.password,
-      );
-      mutate(CURRENT_USER_KEY);
-    } catch (error) {
-      const firebaseError = error as FirebaseError;
-      if (firebaseError.code === "auth/email-already-in-use") {
-        toast.error("An account with this email already exists");
-      } else {
-        toast.error("An error occurred. Please try again later");
+  const onSubmit = useCallback<SubmitHandler<FormInputs>>(
+    async (data) => {
+      try {
+        if (!loading) {
+          setLoading(true);
+          await createUserWithEmailAndPassword(
+            getAuth(app),
+            data.email,
+            data.password,
+          );
+          mutate(CURRENT_USER_KEY);
+        }
+      } catch (error) {
+        const firebaseError = error as FirebaseError;
+        if (firebaseError.code === "auth/email-already-in-use") {
+          toast.error("An account with this email already exists");
+        } else {
+          toast.error("An error occurred. Please try again later");
+        }
+        setLoading(false);
       }
-    }
-  }, []);
+    },
+    [loading],
+  );
 
   return (
     <Dialog open={open} onClose={onClose}>
@@ -118,7 +127,9 @@ export function SignupDialog({
           <Button plain onClick={showLogin}>
             Log in to your account
           </Button>
-          <Button type="submit">Sign up</Button>
+          <Button type="submit" disabled={loading}>
+            Sign up
+          </Button>
         </DialogActions>
       </form>
     </Dialog>

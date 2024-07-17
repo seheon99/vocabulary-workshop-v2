@@ -1,5 +1,5 @@
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { mutate } from "swr";
@@ -32,34 +32,47 @@ export function LoginDialog({
   onClose: (value: boolean) => void;
   showSignup: () => void;
 }) {
+  const [loading, setLoading] = useState(false);
+
   const {
     register,
     formState: { errors },
     handleSubmit,
   } = useForm<FormInputs>();
 
-  const onSubmit = useCallback<SubmitHandler<FormInputs>>(async (data) => {
-    try {
-      await signInWithEmailAndPassword(getAuth(app), data.email, data.password);
-      mutate(CURRENT_USER_KEY);
-    } catch (error) {
-      const firebaseError = error as FirebaseError;
-      if (firebaseError.code === "auth/user-not-found") {
-        toast.error("No account with this email exists");
-      } else if (firebaseError.code === "auth/wrong-password") {
-        toast.error("Incorrect password");
-      } else {
-        toast.error("An error occurred. Please try again later");
+  const onSubmit = useCallback<SubmitHandler<FormInputs>>(
+    async (data) => {
+      try {
+        if (!loading) {
+          setLoading(true);
+          await signInWithEmailAndPassword(
+            getAuth(app),
+            data.email,
+            data.password,
+          );
+          mutate(CURRENT_USER_KEY);
+        }
+      } catch (error) {
+        const firebaseError = error as FirebaseError;
+        if (firebaseError.code === "auth/user-not-found") {
+          toast.error("No account with this email exists");
+        } else if (firebaseError.code === "auth/wrong-password") {
+          toast.error("Incorrect password");
+        } else {
+          toast.error("An error occurred. Please try again later");
+        }
+        setLoading(false);
       }
-    }
-  }, []);
+    },
+    [loading],
+  );
 
   return (
     <Dialog open={open} onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogTitle>Login</DialogTitle>
         <DialogDescription>
-          Log in to your account to access full features.
+          Login to your account to access full features.
         </DialogDescription>
         <DialogBody>
           <Fieldset>
@@ -93,7 +106,9 @@ export function LoginDialog({
           <Button plain onClick={showSignup}>
             Sign up for an account
           </Button>
-          <Button type="submit">Log in</Button>
+          <Button type="submit" disabled={loading}>
+            Login
+          </Button>
         </DialogActions>
       </form>
     </Dialog>
