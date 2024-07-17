@@ -1,22 +1,18 @@
 {
   "extends": [
     "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended",
     "plugin:tailwindcss/recommended",
     "prettier"
   ],
   "rules": {
     "tailwindcss/enforces-negative-arbitrary-values": "off",
-    "import/no-deprecated": "error",
-    "import/no-empty-named-blocks": "error",
-    "import/no-unused-modules": "error",
-    "import/no-import-module-exports": "error",
-    "import/no-absolute-path": "error",
-    "import/no-relative-packages": "error",
-    "import/no-useless-path-segments": "error",
-    "import/consistent-type-specifier-style": "error",
-    "import/first": "error",
-    "import/newline-after-import": "error",
-    "import/no-duplicates": "error",
+    "sort-imports": [
+      "error",
+      {
+        "ignoreDeclarationSort": true
+      }
+    ],
     "import/order": [
       "error",
       {
