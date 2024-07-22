@@ -46,13 +46,20 @@ export function LoginDialog({
           await signInWithEmailAndPassword(auth, data.email, data.password);
         }
       } catch (error) {
-        const firebaseError = error as FirebaseError;
-        if (firebaseError.code === "auth/user-not-found") {
-          toast.error("No account with this email exists");
-        } else if (firebaseError.code === "auth/wrong-password") {
-          toast.error("Incorrect password");
+        if ((error as FirebaseError)?.name === "FirebaseError") {
+          const firebaseError = error as FirebaseError;
+          console.dir(firebaseError);
+          if (firebaseError.code === "auth/invalid-credential") {
+            toast.error("Invalid credentials. Check your email and password");
+          } else if (firebaseError.code === "auth/user-not-found") {
+            toast.error("No account with this email exists");
+          } else if (firebaseError.code === "auth/wrong-password") {
+            toast.error("Incorrect password");
+          } else {
+            toast.error(`An error occurred: ${firebaseError.message}`);
+          }
         } else {
-          toast.error("An error occurred. Please try again later");
+          toast.error("An unexpected error occurred");
         }
         setLoading(false);
       }

@@ -1,8 +1,10 @@
+import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useCallback, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
+import { createUser } from "@/actions";
 import {
   Button,
   Dialog,
@@ -17,8 +19,6 @@ import {
   Label,
 } from "@/components/base";
 import { auth } from "@/firebase";
-
-import type { FirebaseError } from "firebase/app";
 
 export function SignupDialog({
   open,
@@ -43,9 +43,17 @@ export function SignupDialog({
       try {
         if (!loading) {
           setLoading(true);
-          await createUserWithEmailAndPassword(auth, data.email, data.password);
+          const {
+            user: { uid, email },
+          } = await createUserWithEmailAndPassword(
+            auth,
+            data.email,
+            data.password,
+          );
+          await createUser({ id: uid, email: email! });
         }
       } catch (error) {
+        console.dir(error);
         const firebaseError = error as FirebaseError;
         if (firebaseError.code === "auth/email-already-in-use") {
           toast.error("An account with this email already exists");

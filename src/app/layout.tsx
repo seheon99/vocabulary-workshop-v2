@@ -53,7 +53,7 @@ export default function RootLayout({
             <Navbar>
               <NavbarSpacer />
               <NavbarSection>
-                <NavbarItem>
+                <NavbarItem href="/quiz">
                   <RocketLaunchIcon />
                 </NavbarItem>
                 <NavbarUserDropdown />
@@ -64,7 +64,7 @@ export default function RootLayout({
             <Sidebar>
               <SidebarHeader>
                 <SidebarSection className="max-lg:hidden">
-                  <SidebarItem>
+                  <SidebarItem href="/quiz">
                     <RocketLaunchIcon />
                     <SidebarLabel>Start a New Quiz</SidebarLabel>
                   </SidebarItem>
@@ -72,9 +72,9 @@ export default function RootLayout({
               </SidebarHeader>
               <SidebarBody>
                 <SidebarSection>
-                  <SidebarItem href="/words">
+                  <SidebarItem href="/vocabularies">
                     <BookOpenIcon />
-                    <SidebarLabel>Words</SidebarLabel>
+                    <SidebarLabel>Vocabularies</SidebarLabel>
                   </SidebarItem>
                   <SidebarItem>
                     <ChartBarIcon href="/statistics" />

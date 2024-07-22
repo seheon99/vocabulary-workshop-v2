@@ -1,0 +1,189 @@
+diff --git a/package.json b/package.json
+index 881a112..c9bf259 100644
+--- a/package.json
++++ b/package.json
+@@ -13,6 +13,7 @@
+     "@headlessui/react": "^2.1.2",
+     "@heroicons/react": "^2.1.5",
+     "clsx": "^2.1.1",
++    "es-toolkit": "^1.10.1",
+     "firebase": "^10.12.3",
+     "framer-motion": "^11.3.4",
+     "next": "14.2.5",
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index ed49d7d..465c32f 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -17,6 +17,9 @@ importers:
+       clsx:
+         specifier: ^2.1.1
+         version: 2.1.1
++      es-toolkit:
++        specifier: ^1.10.1
++        version: 1.10.1
+       firebase:
+         specifier: ^10.12.3
+         version: 10.12.3
+@@ -958,6 +961,9 @@ packages:
+     resolution: {integrity: sha512-QCOllgZJtaUo9miYBcLChTUaHNjJF3PYs1VidD7AwiEj1kYxKeQTctLAezAOH5ZKRH0g2IgPn6KwB4IT8iRpvA==}
+     engines: {node: '>= 0.4'}
+ 
++  es-toolkit@1.10.1:
++    resolution: {integrity: sha512-Xh/sqYQFPWXr/d+tFNULPcFUrpGrZMMqhu+6rDRhZd7N7uw53ZWXE17sbZZ0x7d5BTZfRJG+ItDI1y1vux1izQ==}
++
+   escalade@3.1.2:
+     resolution: {integrity: sha512-ErCHMCae19vR8vQGe50xIsVomy19rg6gFu3+r3jkEO46suLMWBksvVyoGgQV+jOfl84ZSOSlmv6Gxa89PmTGmA==}
+     engines: {node: '>=6'}
+@@ -3317,6 +3323,8 @@ snapshots:
+       is-date-object: 1.0.5
+       is-symbol: 1.0.4
+ 
++  es-toolkit@1.10.1: {}
++
+   escalade@3.1.2: {}
+ 
+   escape-string-regexp@4.0.0: {}
+diff --git a/src/firebase.ts b/src/firebase.ts
+index d742c6d..c27676e 100644
+--- a/src/firebase.ts
++++ b/src/firebase.ts
+@@ -5,6 +5,7 @@ import {
+   onAuthStateChanged,
+   setPersistence,
+ } from "firebase/auth";
++import { getFirestore } from "firebase/firestore";
+ import { mutate } from "swr";
+ 
+ import { CURRENT_USER_KEY } from "./hooks";
+@@ -25,3 +26,5 @@ export const auth = getAuth(app);
+ 
+ setPersistence(auth, browserSessionPersistence);
+ onAuthStateChanged(auth, () => mutate(CURRENT_USER_KEY));
++
++export const firestore = getFirestore(app);
+diff --git a/src/hooks/use-category-query.ts b/src/hooks/use-category-query.ts
+new file mode 100644
+index 0000000..39f0ecd
+--- /dev/null
++++ b/src/hooks/use-category-query.ts
+@@ -0,0 +1,29 @@
++import { isNil } from "es-toolkit";
++import { doc, getDoc } from "firebase/firestore";
++import useSWR from "swr";
++
++import { firestore } from "@/firebase";
++
++import type { Category } from "@/types";
++
++export function useCategoryQuery(id?: string | null) {
++  return useSWR(
++    CATEGORY_QUERY_KEY(id),
++    async ([collection, id]) => {
++      const docSnap = await getDoc(doc(firestore, collection, id));
++      if (!docSnap.exists()) {
++        return null;
++      }
++
++      const data = docSnap.data();
++      return {
++        id: docSnap.id,
++        name: data.name,
++      } as Category;
++    },
++    { dedupingInterval: 1000 * 60 * 60 },
++  );
++}
++
++const CATEGORY_QUERY_KEY = (id?: string | null) =>
++  isNil(id) ? null : ["categories", id];
+diff --git a/src/hooks/use-vocabulary-query.ts b/src/hooks/use-vocabulary-query.ts
+new file mode 100644
+index 0000000..3dd360f
+--- /dev/null
++++ b/src/hooks/use-vocabulary-query.ts
+@@ -0,0 +1,29 @@
++import { collection, getDocs } from "firebase/firestore";
++import useSWR from "swr";
++
++import { firestore } from "@/firebase";
++
++import type { Vocabulary } from "@/types/vocabulary";
++
++export function useVocabulariesQuery() {
++  return useSWR(
++    VOCABULARY_QUERY_KEY,
++    async (path) => {
++      const querySnapshot = await getDocs(collection(firestore, path));
++      return Promise.all(
++        querySnapshot.docs.map(async (doc) => {
++          const data = doc.data();
++          return {
++            id: doc.id,
++            categoryId: data.category._key.path.segments.at(-1),
++            name: data.name,
++            definition: data.definition,
++          } as Vocabulary;
++        }),
++      );
++    },
++    { dedupingInterval: 1000 * 60 * 60 },
++  );
++}
++
++export const VOCABULARY_QUERY_KEY = "vocabularies";
+diff --git a/src/types/category.ts b/src/types/category.ts
+new file mode 100644
+index 0000000..9af7abc
+--- /dev/null
++++ b/src/types/category.ts
+@@ -0,0 +1,4 @@
++export type Category = {
++  id: string;
++  name: string;
++};
+diff --git a/src/types/index.ts b/src/types/index.ts
+new file mode 100644
+index 0000000..cb821ac
+--- /dev/null
++++ b/src/types/index.ts
+@@ -0,0 +1,2 @@
++export * from "./category";
++export * from "./vocabulary";
+diff --git a/src/types/keyword.ts b/src/types/keyword.ts
+new file mode 100644
+index 0000000..43c5c49
+--- /dev/null
++++ b/src/types/keyword.ts
+@@ -0,0 +1,7 @@
++import { Vocabulary } from "./vocabulary";
++
++export type Keyword = {
++  text: string;
++
++  source: Vocabulary;
++};
+diff --git a/src/types/submission.ts b/src/types/submission.ts
+new file mode 100644
+index 0000000..5c9907d
+--- /dev/null
++++ b/src/types/submission.ts
+@@ -0,0 +1,7 @@
++import { Vocabulary } from "./vocabulary";
++
++export type Submission = {
++  answer: string;
++
++  vocabulary: Vocabulary;
++};
+diff --git a/src/types/vocabulary.ts b/src/types/vocabulary.ts
+new file mode 100644
+index 0000000..e2d614d
+--- /dev/null
++++ b/src/types/vocabulary.ts
+@@ -0,0 +1,6 @@
++export type Vocabulary = {
++  id: string;
++  categoryId: string;
++  name: string;
++  definition: string;
++};
