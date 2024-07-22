@@ -1,0 +1,19 @@
+name: Release on seheon server
+on:
+  pull_request:
+    types:
+      - closed
+jobs:
+  ssh-connection:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ${{ vars.SSH_PRIVATE_KEY_FILE }}
+          chmod 600 ${{ vars.SSH_PRIVATE_KEY_FILE }}
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Execute SSH Command
+        run: |
+          ssh -o BatchMode=yes -i ${{ vars.SSH_PRIVATE_KEY_FILE }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '${{ secrets.SSH_COMMAND }}'
