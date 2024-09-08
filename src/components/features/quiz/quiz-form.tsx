@@ -38,11 +38,6 @@ export function QuizForm({ vocabularyId }: { vocabularyId: string }) {
     }
   }, [data, router]);
 
-  if (user === null) {
-    toast.error("You need to be logged in to submit an answer");
-    router.replace("/");
-  }
-
   if (isNil(user)) {
     return <Text>Loading ...</Text>;
   }
