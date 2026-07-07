@@ -17,10 +17,70 @@ import { EditVocabularyButton } from "@/components/features/vocabularies";
 
 export default async function Submission({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{
+    order?: string;
+    start?: string;
+    end?: string;
+    cursor?: string;
+  }>;
 }) {
   const { id } = await params;
+  const query = await searchParams;
+
+  const parseNumber = (value?: string) => {
+    if (!value) {
+      return undefined;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  };
+
+  const order =
+    query.order === "sequential"
+      ? "sequential"
+      : query.order === "random"
+        ? "random"
+        : undefined;
+  const start = parseNumber(query.start);
+  const end = parseNumber(query.end);
+  const cursor = parseNumber(query.cursor);
+
+  const continueParams = new URLSearchParams();
+  if (order) {
+    continueParams.set("order", order);
+  }
+  if (typeof start === "number") {
+    continueParams.set("start", String(start));
+  }
+  if (typeof end === "number") {
+    continueParams.set("end", String(end));
+  }
+
+  if (order === "sequential" && typeof start === "number") {
+    const safeStart = Math.max(1, start);
+    const safeEnd = typeof end === "number" ? Math.max(end, safeStart) : safeStart;
+    const currentCursor =
+      typeof cursor === "number" && cursor >= safeStart && cursor <= safeEnd
+        ? cursor
+        : safeStart;
+    const nextCursor = currentCursor + 1 > safeEnd ? safeStart : currentCursor + 1;
+    continueParams.set("cursor", String(nextCursor));
+  } else if (order === "sequential" && typeof end === "number") {
+    const safeEnd = Math.max(1, end);
+    const safeStart = typeof start === "number" ? Math.max(1, start) : 1;
+    const currentCursor =
+      typeof cursor === "number" && cursor >= safeStart && cursor <= safeEnd
+        ? cursor
+        : safeStart;
+    const nextCursor = currentCursor + 1 > safeEnd ? safeStart : currentCursor + 1;
+    continueParams.set("cursor", String(nextCursor));
+  }
+
+  const continueQuery = continueParams.toString();
+  const continueHref = continueQuery ? `/quiz?${continueQuery}` : "/quiz";
 
   const submission = await findSubmission(id);
   if (!submission) {
@@ -113,7 +173,7 @@ export default async function Submission({
           <KeyboardLink
             className="flex items-center justify-center"
             keyName="Enter"
-            href="/quiz"
+            href={continueHref}
             context="screen"
           >
             <Text>
@@ -125,7 +185,7 @@ export default async function Submission({
           </KeyboardLink>
         </div>
         <div className="flex flex-1 items-center justify-end">
-          <Link href="/quiz">
+          <Link href={continueHref}>
             <Button plain>
               Next <ChevronRightIcon />
             </Button>

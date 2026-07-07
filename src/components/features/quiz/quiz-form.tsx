@@ -19,7 +19,20 @@ import {
 } from "@/components/base";
 import { useCurrentUser } from "@/hooks";
 
-export function QuizForm({ vocabularyId }: { vocabularyId: string }) {
+export type QuizOptions = {
+  order?: "random" | "sequential";
+  start?: number;
+  end?: number;
+  cursor?: number;
+};
+
+export function QuizForm({
+  vocabularyId,
+  quizOptions,
+}: {
+  vocabularyId: string;
+  quizOptions?: QuizOptions;
+}) {
   const router = useRouter();
 
   const { register, handleSubmit } = useForm<FormInputs>();
@@ -52,9 +65,24 @@ export function QuizForm({ vocabularyId }: { vocabularyId: string }) {
 
   useEffect(() => {
     if (data?.id) {
-      router.push(`/submissions/${data.id}`);
+      const params = new URLSearchParams();
+      if (quizOptions?.order) {
+        params.set("order", quizOptions.order);
+      }
+      if (typeof quizOptions?.start === "number") {
+        params.set("start", String(quizOptions.start));
+      }
+      if (typeof quizOptions?.end === "number") {
+        params.set("end", String(quizOptions.end));
+      }
+      if (typeof quizOptions?.cursor === "number") {
+        params.set("cursor", String(quizOptions.cursor));
+      }
+
+      const query = params.toString();
+      router.push(`/submissions/${data.id}${query ? `?${query}` : ""}`);
     }
-  }, [data, router]);
+  }, [data, router, quizOptions]);
 
   if (isNil(user)) {
     toast.error("You must be logged in to take the quiz");
